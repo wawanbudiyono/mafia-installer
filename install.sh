@@ -2,6 +2,8 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 clear
 
 echo "========================================="
@@ -65,16 +67,24 @@ mkdir -p /mnt/storage/compose/cloudflared
 
 echo ""
 read -p "WebDAV Username : " WEBDAV_USER
+
 read -s -p "WebDAV Password : " WEBDAV_PASS
+
 echo
+
 read -p "Cloudflare Tunnel Token : " CF_TOKEN
 
 echo ""
 echo "==> Copy Compose"
 
-cp compose/filebrowser.yaml /mnt/storage/compose/filebrowser/compose.yaml
-cp compose/webdav.yaml /mnt/storage/compose/webdav/compose.yaml
-cp compose/cloudflared.yaml /mnt/storage/compose/cloudflared/compose.yaml
+cp "$SCRIPT_DIR/compose/filebrowser.yaml" \
+/mnt/storage/compose/filebrowser/compose.yaml
+
+cp "$SCRIPT_DIR/compose/webdav.yaml" \
+/mnt/storage/compose/webdav/compose.yaml
+
+cp "$SCRIPT_DIR/compose/cloudflared.yaml" \
+/mnt/storage/compose/cloudflared/compose.yaml
 
 sed -i "s/WEB_USER/$WEBDAV_USER/g" \
 /mnt/storage/compose/webdav/compose.yaml
@@ -109,6 +119,8 @@ cd /mnt/storage/compose/cloudflared
 $COMPOSE pull
 $COMPOSE up -d
 
+cd "$SCRIPT_DIR"
+
 echo ""
 
 read -p "Install Google Drive? (y/n) : " GDRIVE
@@ -122,7 +134,7 @@ if [[ "$GDRIVE" =~ ^[Yy]$ ]]; then
 
     rclone config
 
-    cp systemd/rclone-gdrive.service \
+    cp "$SCRIPT_DIR/systemd/rclone-gdrive.service" \
     /etc/systemd/system/
 
     systemctl daemon-reload
@@ -141,6 +153,7 @@ echo ""
 docker ps
 
 echo ""
+
 echo "========================================="
 echo " FileBrowser : http://IP:8080"
 echo " WebDAV      : http://IP:8081"
