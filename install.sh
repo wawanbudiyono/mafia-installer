@@ -69,7 +69,6 @@ echo ""
 read -p "WebDAV Username : " WEBDAV_USER
 
 read -s -p "WebDAV Password : " WEBDAV_PASS
-
 echo
 
 read -p "Cloudflare Tunnel Token : " CF_TOKEN
@@ -128,11 +127,16 @@ read -p "Install Google Drive? (y/n) : " GDRIVE
 if [[ "$GDRIVE" =~ ^[Yy]$ ]]; then
 
     echo ""
-    echo "======================================"
-    echo " Login Google Drive"
-    echo "======================================"
 
-    rclone config
+    if rclone listremotes | grep -q "^gdrive:$"; then
+        echo "Google Drive sudah dikonfigurasi."
+    else
+        echo "======================================"
+        echo " Konfigurasi Google Drive"
+        echo "======================================"
+
+        rclone config
+    fi
 
     cp "$SCRIPT_DIR/systemd/rclone-gdrive.service" \
     /etc/systemd/system/
