@@ -22,13 +22,16 @@ if ! command -v apt >/dev/null 2>&1; then
 fi
 
 echo ""
-echo "==> Install Package"
+echo "==> Update Repository"
 
 apt update
 
+echo ""
+echo "==> Install Package"
+
 apt install -y \
 docker.io \
-docker-compose-plugin \
+docker-compose \
 curl \
 wget \
 git \
@@ -39,10 +42,21 @@ rclone
 systemctl enable docker
 systemctl start docker
 
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE="docker compose"
+elif command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE="docker-compose"
+else
+    echo "Docker Compose tidak ditemukan!"
+    exit 1
+fi
+
 echo ""
 echo "==> Membuat Folder"
 
 mkdir -p /mnt/storage/data
+mkdir -p /mnt/storage/data/GoogleDrive
+
 mkdir -p /mnt/storage/appdata/filebrowser
 
 mkdir -p /mnt/storage/compose/filebrowser
@@ -51,21 +65,15 @@ mkdir -p /mnt/storage/compose/cloudflared
 
 echo ""
 read -p "WebDAV Username : " WEBDAV_USER
-
 read -s -p "WebDAV Password : " WEBDAV_PASS
-
 echo
-
 read -p "Cloudflare Tunnel Token : " CF_TOKEN
 
 echo ""
-
 echo "==> Copy Compose"
 
 cp compose/filebrowser.yaml /mnt/storage/compose/filebrowser/compose.yaml
-
 cp compose/webdav.yaml /mnt/storage/compose/webdav/compose.yaml
-
 cp compose/cloudflared.yaml /mnt/storage/compose/cloudflared/compose.yaml
 
 sed -i "s/WEB_USER/$WEBDAV_USER/g" \
@@ -82,39 +90,34 @@ echo "==> Deploy FileBrowser"
 
 cd /mnt/storage/compose/filebrowser
 
-docker compose pull
-
-docker compose up -d
+$COMPOSE pull
+$COMPOSE up -d
 
 echo ""
 echo "==> Deploy WebDAV"
 
 cd /mnt/storage/compose/webdav
 
-docker compose pull
-
-docker compose up -d
+$COMPOSE pull
+$COMPOSE up -d
 
 echo ""
 echo "==> Deploy Cloudflared"
 
 cd /mnt/storage/compose/cloudflared
 
-docker compose pull
-
-docker compose up -d
+$COMPOSE pull
+$COMPOSE up -d
 
 echo ""
 
-read -p "Install Google Drive ? (y/n) : " GDRIVE
+read -p "Install Google Drive? (y/n) : " GDRIVE
 
-if [ "$GDRIVE" = "y" ] || [ "$GDRIVE" = "Y" ]; then
-
-    mkdir -p /mnt/storage/data/GoogleDrive
+if [[ "$GDRIVE" =~ ^[Yy]$ ]]; then
 
     echo ""
     echo "======================================"
-    echo "Login Google Drive"
+    echo " Login Google Drive"
     echo "======================================"
 
     rclone config
@@ -123,9 +126,7 @@ if [ "$GDRIVE" = "y" ] || [ "$GDRIVE" = "Y" ]; then
     /etc/systemd/system/
 
     systemctl daemon-reload
-
     systemctl enable rclone-gdrive
-
     systemctl restart rclone-gdrive
 
 fi
@@ -140,7 +141,7 @@ echo ""
 docker ps
 
 echo ""
-
-echo "FileBrowser : http://IP:8080"
-
-echo "WebDAV      : http://IP:8081"
+echo "========================================="
+echo " FileBrowser : http://IP:8080"
+echo " WebDAV      : http://IP:8081"
+echo "========================================="
