@@ -1,0 +1,17 @@
+services:
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: filebrowser
+    restart: unless-stopped
+
+    ports:
+      - "8080:80"
+
+    user: "0:0"
+
+    volumes:
+      - /mnt/storage/data:/srv
+      - /mnt/storage/appdata/filebrowser:/config
+
+    environment:
+      TZ: Asia/Jakarta

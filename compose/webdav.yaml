@@ -1,0 +1,25 @@
+services:
+  webdav:
+    image: rclone/rclone:latest
+    container_name: webdav
+
+    restart: unless-stopped
+
+    command: >
+      serve webdav /data
+      --addr :8081
+      --user WEB_USER
+      --pass WEB_PASS
+
+    ports:
+      - "8081:8081"
+
+    volumes:
+      - type: bind
+        source: /mnt/storage/data
+        target: /data
+        bind:
+          propagation: rshared
+
+    environment:
+      TZ: Asia/Jakarta
